@@ -9,6 +9,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 public class EnvironmentService {
 
@@ -44,13 +46,16 @@ public class EnvironmentService {
 
     private void updateWeatherAsync() {
         HttpClient client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
 
+        String url = "https://api.open-meteo.com/v1/forecast?latitude=31.326&longitude=75.576&current_weather=true";
+
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://wttr.in/Jalandhar?format=3")) 
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                .uri(URI.create(url))
+                .header("User-Agent", "TermDash/1.0")
                 .build();
 
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -62,7 +67,17 @@ public class EnvironmentService {
                 })
                 .thenAccept(body -> {
                     if (body != null && !body.isBlank()) {
-                        this.cachedWeather = body.trim();
+                        try {
+                            Gson gson = new Gson();
+                            JsonObject json = gson.fromJson(body, JsonObject.class);
+                            JsonObject current = json.getAsJsonObject("current_weather");
+                            double temp = current.get("temperature").getAsDouble();
+                            int code = current.get("weathercode").getAsInt();
+                            String condition = decodeWeatherCode(code);
+                            this.cachedWeather = String.format("Jalandhar: %s %.1f°C", condition, temp);
+                        } catch (Exception e) {
+                            this.cachedWeather = "Parse Error";
+                        }
                     }
                 })
                 .exceptionally(e -> {
@@ -72,5 +87,20 @@ public class EnvironmentService {
                     this.cachedWeather = "ERR: " + msg;
                     return null;
                 });
+    }
+
+    private String decodeWeatherCode(int code) {
+        switch (code) {
+            case 0: return "Clear";
+            case 1: return "Mainly Clear";
+            case 2: return "Partly Cloudy";
+            case 3: return "Overcast";
+            case 45: case 48: return "Fog";
+            case 51: case 53: case 55: return "Drizzle";
+            case 61: case 63: case 65: return "Rain";
+            case 71: case 73: case 75: return "Snow";
+            case 95: case 96: case 99: return "Thunderstorm";
+            default: return "";
+        }
     }
 }

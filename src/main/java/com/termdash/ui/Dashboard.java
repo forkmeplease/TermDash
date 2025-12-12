@@ -32,7 +32,6 @@ public class Dashboard {
     private List<SystemMonitor.ProcessMetric> cachedProcesses = Collections.emptyList();
     private long lastProcessUpdate = 0;
 
-    // Matrix Theme Colors
     private static final TextColor BACK_COLOR = TextColor.ANSI.BLACK;
     private static final TextColor TEXT_COLOR = TextColor.ANSI.GREEN;
     private static final TextColor HIGHLIGHT_COLOR = TextColor.ANSI.GREEN_BRIGHT;
