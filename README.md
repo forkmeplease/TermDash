@@ -90,7 +90,6 @@ termdash/
 - [Lanterna](https://github.com/mabe02/lanterna) - Terminal UI library
 - [OSHI](https://github.com/oshi/oshi) - Operating System and Hardware Information
 - [Gson](https://github.com/google/gson) - JSON parsing for API responses
-- [SLF4J](https://www.slf4j.org/) - Logging framework
 
 ## License
 
